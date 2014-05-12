@@ -1,0 +1,37 @@
+#include<letters.h>
+
+int LEDpins[]={2,3,4,5,6,7,8,9};
+int curret_col =0;
+int number_cols=8;
+int invert =0;
+int number_rows=8;
+int delay_col=1;
+
+
+void setup()
+{
+    for(int i=0; i<number_rows=8; i++)    
+    {
+	pinMode(LEDpins[i],OUTPUT);
+    }
+}
+
+
+void loop()
+{	
+   show(H,0); 
+}
+
+void show(byte letter[])
+{
+   for(c=0; c<number_cols; c++) 
+   {
+	for(r=0; r<number_rows; r++)	 
+	{
+	    digitalWrite(LEDpins[r],bitRead(letter[r],c));	
+	}
+   }
+   delay(delay_col);
+}
+
+

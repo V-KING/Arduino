@@ -1,0 +1,124 @@
+long step_delay=0;
+long last_step_time=0;
+int step_number=0;
+
+int Pin0=8,Pin1=9,Pin2=10,Pin3=11;
+int number_of_steps=64;	//减速比是1:64
+
+void my_stepMotor(int thisStep)
+{
+  switch (thisStep) {
+  case 0:
+    digitalWrite(Pin0, LOW);
+    digitalWrite(Pin1, LOW);
+    digitalWrite(Pin2, LOW);
+    digitalWrite(Pin3, HIGH);
+    break;
+  case 1:
+    digitalWrite(Pin0, LOW);
+    digitalWrite(Pin1, LOW);
+    digitalWrite(Pin2, HIGH);
+    digitalWrite(Pin3, HIGH);
+    break;
+  case 2:
+    digitalWrite(Pin0, LOW);
+    digitalWrite(Pin1, LOW);
+    digitalWrite(Pin2, HIGH);
+    digitalWrite(Pin3, LOW);
+    break;
+  case 3:
+    digitalWrite(Pin0, LOW);
+    digitalWrite(Pin1, HIGH);
+    digitalWrite(Pin2, HIGH);
+    digitalWrite(Pin3, LOW);
+    break;
+  case 4:
+    digitalWrite(Pin0, LOW);
+    digitalWrite(Pin1, HIGH);
+    digitalWrite(Pin2, LOW);
+    digitalWrite(Pin3, LOW);
+    break;
+  case 5:
+    digitalWrite(Pin0, HIGH);
+    digitalWrite(Pin1, HIGH);
+    digitalWrite(Pin2, LOW);
+    digitalWrite(Pin3, LOW);
+    break;
+  case 6:
+    digitalWrite(Pin0, HIGH);
+    digitalWrite(Pin1, LOW);
+    digitalWrite(Pin2, LOW);
+    digitalWrite(Pin3, LOW);
+    break;
+  case 7:
+    digitalWrite(Pin0, HIGH);
+    digitalWrite(Pin1, LOW);
+    digitalWrite(Pin2, LOW);
+    digitalWrite(Pin3, HIGH);
+    break;
+  default:
+    digitalWrite(Pin0, LOW);
+    digitalWrite(Pin1, LOW);
+    digitalWrite(Pin2, LOW);
+    digitalWrite(Pin3, LOW);
+    break;
+  } 
+}
+
+void my_setSpeed(long whatSpeed)
+{ 
+  step_delay=60L * 1000L /number_of_steps / whatSpeed;
+}
+
+void my_step(int steps_to_move,int direction)
+{  
+  int steps_left = abs(steps_to_move);  // how many steps to take
+
+  // decrement the number of steps, moving one step each time:
+  while(steps_left > 0) {
+    // move only if the appropriate delay has passed:
+    if (millis() - last_step_time >= step_delay) {
+      // get the timeStamp of when you stepped:
+      last_step_time = millis();
+      // increment or decrement the step number,
+      // depending on direction:
+      if (direction == 1) {
+        step_number++;
+        if (step_number == number_of_steps) {
+          step_number = 0;
+        }
+      } 
+      else if(direction==-1){
+        if (step_number == 0) {
+          step_number = number_of_steps;
+        }
+        step_number--;
+      	Serial.println(step_number);
+      }
+      // decrement the steps left:
+      steps_left--;
+      // step the motor to step number 0, 1, 2, or 3:
+      my_stepMotor(step_number % 8);
+    }
+  }
+}
+
+/*********主程序*********/
+
+void setup()
+{
+  // set the speed of the motor to 30 RPMs
+  Serial.begin(9600);
+  my_setSpeed(500);
+  pinMode(Pin0,OUTPUT);
+  pinMode(Pin1,OUTPUT);
+  pinMode(Pin2,OUTPUT);
+  pinMode(Pin3,OUTPUT);
+}
+
+void loop()
+{
+  //正反转，1就是正转，0就是反转
+  my_step(64*64/2,-1);//64*64 step == 2*PI
+  delay(2000);
+}

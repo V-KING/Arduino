@@ -1,0 +1,74 @@
+//定义一个红桃心 LOVE，头往左偏侧过来看
+//沿着1走，画一个‘心’的图形
+byte LOVE[] = {
+  B01110000,
+  B10001000,
+  B10000100,
+  B01000010,
+  B00100001,
+  B01000010,
+  B10000100,
+  B10001000,
+  B01110000,
+};
+//定义字母I，头往左偏侧过来看头，
+//沿着1走，画一个‘心’的图形
+byte I[]={
+  B00000000,
+  B00000000,
+  B00000000,
+  B10000001,
+  B11111111,
+  B10000001,
+  B00000000,
+  B00000000,
+  B00000000
+};
+//定义字母U
+byte U[]={
+  B00000000,
+  B11111111,
+  B00000001,
+  B00000001,
+  B00000001,
+  B00000001,
+  B00000001,
+  B11111111,
+  B00000000
+};
+
+int LEDpins[]={9,8,7,6,5,4,3,2}; //定义对应的LED引脚 
+
+
+void setup() {
+  int r;
+
+  for (r = 0; r < 8; r++) {
+    pinMode(LEDpins[ r ], OUTPUT);
+    digitalWrite(LEDpins[ r ], OUTPUT);
+  }
+
+}
+
+void loop() {
+  show(I   ,sizeof(I)   /sizeof(I[0]));
+  show(LOVE,sizeof(LOVE)/sizeof(LOVE[0]));
+  show(U   ,sizeof(U)   /sizeof(U[0]));
+}
+
+/*
+ *功能：显示字或者图形
+ *参数：letter：显示的字母
+ *	n：有多少行，每一行就是一个字节
+ *返回：无
+ *作者：firebaolong@163.com
+ * */
+void show(byte letter[],int n) {
+  for (int i=0; i<n; i++){
+    for(int j=0; j<8; j++){
+      digitalWrite(LEDpins[j],!bitRead(letter[i],j) );
+    }
+    delay(2);
+  }
+}
+
