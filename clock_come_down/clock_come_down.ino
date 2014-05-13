@@ -60,6 +60,7 @@ int fen1=0;                       //小时的第一个数
 int fen2=0;                       //小时的第二个数
 /* **定时器用到的变量** */
 byte miao=0;          		  //秒
+byte miao2=0;          		  //倒数器的秒
 byte fen=0;	         	  //分
 byte shi=12;           		  //时
 /* **串口相关变量** */           
@@ -271,6 +272,7 @@ void init_time()
 
 int count_ms=0;					//ms计数器
 int count_10ms=0;				//ms计数器
+int flag_count10msRun=0;			//ms计数器
 /*
  * 定时器2溢出中断
  * */
@@ -283,7 +285,7 @@ ISR(TIMER2_OVF_vect)
 	count_ms=0;
 	miao++;
     }
-    if(count_ms>=10){
+    if(count_ms>=10 && flag_count10msRun==1){
 	count_10ms++;
     }
 }  
@@ -323,8 +325,8 @@ void setup()
     init_time();  
     for(int i=2;i<=13;i++)
 	pinMode(i,OUTPUT);//设置4～11 引脚为输出模式
-    pinMode(A0,INPUT_PULLUP);		
-    pinMode(A1,INPUT_PULLUP);		
+    pinMode(A0,INPUT);		
+    pinMode(A1,INPUT);		
 }
 /* 
  * 参数：button接到按键的引脚号
@@ -337,8 +339,8 @@ int PRESSED= 0;
 int PRESS_MOMENT=111;
 int PRESS_ALLWAYS=222;
 int RELEASE_MOMENT=333;
-int priorButtonState = UNPRESSED;
 int buttonDetect(int button){
+    static int priorButtonState = UNPRESSED;
     int state;
     if(digitalRead(button)==PRESSED){//本次按下
 	if(priorButtonState==UNPRESSED){
@@ -360,6 +362,32 @@ int buttonDetect(int button){
     }
     return state;
 }
+
+static int priorButtonState1 = UNPRESSED;
+int buttonDetect1(int button){
+    int state;
+    if(digitalRead(button)==PRESSED){//本次按下
+	if(priorButtonState1==UNPRESSED){
+	    state = PRESS_MOMENT;		//按下的一瞬间
+	}
+	else{
+	    state = PRESS_ALLWAYS;		//一直按着
+	}
+	priorButtonState1 = PRESSED;		//赋值
+    }
+    else {//本次没有按下
+	if(priorButtonState1 == PRESSED){
+	    state = RELEASE_MOMENT;		//释放瞬间
+	}
+	else{
+	    state = UNPRESSED;			//根本没按
+	}
+	priorButtonState1 = UNPRESSED;		//赋值
+    }
+    return state;
+}
+
+
 /* 
  * 按key后切换模式
  * 返回：切换的模式
@@ -368,18 +396,18 @@ int buttonDetect(int button){
 int mode = CLK_MODE;
 int	modeArray[2] ={	CLK_MODE, COME_DOWN_MODE};
 static int keyIndex=0;				//默认从0开始
-static int buttonActionState;			//存放按键状态
 int ifKeySwitchMode(){
-    buttonActionState=buttonDetect(A1);
-    if(buttonActionState==RELEASE_MOMENT){
+    static int buttonActionState1;		//存放按键状态
+    buttonActionState1=buttonDetect1(A1);
+    if(buttonActionState1==RELEASE_MOMENT){
 	++keyIndex;
 	if( keyIndex==sizeof(modeArray)/sizeof(modeArray[0]) ){
 	    keyIndex=0;
 	}
 	mode=modeArray[keyIndex];		//获得键值	
     }
-    Serial.print("mode = ");
-    Serial.println(mode);
+    //Serial.print("mode = ");
+    //Serial.println(mode);
     return mode;
 }
 
@@ -389,7 +417,7 @@ boolean stopFlag=0;
 int state;
 void loop()
 {
-    mode=ifKeySwitchMode();
+    mode=ifKeySwitchMode();//key1
     switch(mode)
     {
 	case CLK_MODE:
@@ -402,17 +430,14 @@ void loop()
     //disptime(shi,miao);
 }
 
+
+
 void clockMode(){
-    /*  
-    mode=ifKeySwitchMode();
-    if(mode == COME_DOWN_MODE){
-	return;
-    }*/
-    if((buttonActionState=buttonDetect(A1))==RELEASE_MOMENT){
-	mode = COME_DOWN_MODE;
+    if((mode=ifKeySwitchMode()) == COME_DOWN_MODE){
 	return;
     }
     //test
+    //ms-->miao //用millis()
     if(miao>=60)		//满60秒清零,分加1
     {
 	miao=0;
@@ -463,45 +488,50 @@ void clockMode(){
  * */
 void comeDownMode(){
     //第一次检查key1
-    if((buttonActionState=buttonDetect(A1))==RELEASE_MOMENT){
-	mode = CLK_MODE;
+    Serial.println(">>>comeDownBegin...");
+    //key1
+    if((mode=ifKeySwitchMode()) == CLK_MODE){
 	return;
     }
 
-    //按键
-    if(buttonDetect(A0)==PRESS_MOMENT){
-	stopFlag=~stopFlag;
-    }
-    //如果stopFlag为1就停止时间；else就重启时间跑
-    if(stopFlag){
-	NotUpdataTime();
+/* ****** */
+    //按键key0
+    if(buttonDetect(A0)==RELEASE_MOMENT){
+	flag_count10msRun=1;
+	Serial.println("-----------A0 press------------");
+	Serial.print("---mode---->");
+	Serial.println(mode);
+
+	//miao2=miao;
     }
     else{
-	updateTime();
+	flag_count10msRun=0;
+	miao2=0;
+	count_10ms=0;
     }
-    //第二次检查key1
-    if((buttonActionState=buttonDetect(A1))==RELEASE_MOMENT){
-	mode = CLK_MODE;
-	return;
-    }
+    Serial.println("********out if*******");
+/* ****** */
     //时间处理部分
     if(count_10ms>=100)  {
 	count_10ms=0;
-	if(miao>=100)		    //满100百分秒清零,秒加1
+	miao2++;
+	if(miao2>=100)		    //满100百分秒清零,秒加1
 	{
-	    miao=0;
+	    miao2=0;
 	}
     }
+    //第2次检查key1
+    if((mode=ifKeySwitchMode()) == CLK_MODE){
+	return;
+    }
+    //显示
+    Serial.println("xxxxxxxxxxxxxxxxxxxxxx");
+    disptime(miao2,count_10ms);
     //第三次检查key1
-    if((buttonActionState=buttonDetect(A1))==RELEASE_MOMENT){
-	mode = CLK_MODE;
+    if((mode=ifKeySwitchMode()) == CLK_MODE){
 	return;
     }
-    disptime(miao,count_10ms);
-    if((buttonActionState=buttonDetect(A1))==RELEASE_MOMENT){
-	mode = CLK_MODE;
-	return;
-    }
+    Serial.println("<<<<out ");
 }
 
 
