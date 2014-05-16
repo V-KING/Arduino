@@ -325,8 +325,8 @@ void setup()
     init_time();  
     for(int i=2;i<=13;i++)
 	pinMode(i,OUTPUT);//设置4～11 引脚为输出模式
-    pinMode(A0,INPUT);		
-    pinMode(A1,INPUT);		
+    digitalWrite(A1,HIGH);
+    digitalWrite(A5,HIGH);
 }
 /* 
  * 参数：button接到按键的引脚号
@@ -339,8 +339,8 @@ int PRESSED= 0;
 int PRESS_MOMENT=111;
 int PRESS_ALLWAYS=222;
 int RELEASE_MOMENT=333;
+static int priorButtonState = UNPRESSED;
 int buttonDetect(int button){
-    static int priorButtonState = UNPRESSED;
     int state;
     if(digitalRead(button)==PRESSED){//本次按下
 	if(priorButtonState==UNPRESSED){
@@ -386,8 +386,25 @@ int buttonDetect1(int button){
     }
     return state;
 }
-
-
+/* 
+ * siren2.ino中的扫描程序。
+ * */
+int button_state = HIGH;      //存储按键上一次检测的状态，用于判断按键是否按下
+int buttonDetect3() {
+	if(digitalRead(A5) == LOW){   //如果读取到按键引脚为低电平，表示按键被按下
+		button_state=LOW;	      //把按键状态变量置为低
+		return 0;		      //按键没有释放，返回0
+	}
+	else {			      //如果读取到按键引脚为高电平
+		if(button_state==LOW) {	      //如果按键上一状态为低电平，则表示按键被释放
+			button_state=HIGH;        //将按键状态变量置为高
+			return 1;	              //按键释放，返回1
+		}
+		else {			      //按键未按下，返回0
+			return 0;
+		}
+	}
+}
 /* 
  * 按key后切换模式
  * 返回：切换的模式
@@ -417,7 +434,8 @@ boolean stopFlag=0;
 int state;
 void loop()
 {
-    mode=ifKeySwitchMode();//key1
+    //mode=ifKeySwitchMode();//key1
+    mode=22;
     switch(mode)
     {
 	case CLK_MODE:
@@ -486,9 +504,9 @@ void clockMode(){
 /*
  * 倒计时模式
  * */
+int flag=0;
 void comeDownMode(){
     //第一次检查key1
-    Serial.println(">>>comeDownBegin...");
     //key1
     if((mode=ifKeySwitchMode()) == CLK_MODE){
 	return;
@@ -496,20 +514,20 @@ void comeDownMode(){
 
 /* ****** */
     //按键key0
-    if(buttonDetect(A0)==RELEASE_MOMENT){
+    if(buttonDetect(A5)==RELEASE_MOMENT){
 	flag_count10msRun=1;
-	Serial.println("-----------A0 press------------");
-	Serial.print("---mode---->");
-	Serial.println(mode);
-
-	//miao2=miao;
+	flag = !flag;
+	miao2=miao;
+    }
+    
+    if(flag){
+	flag_count10msRun=1;
     }
     else{
 	flag_count10msRun=0;
-	miao2=0;
-	count_10ms=0;
+	//miao2=0;
+	//count_10ms=0;
     }
-    Serial.println("********out if*******");
 /* ****** */
     //时间处理部分
     if(count_10ms>=100)  {
@@ -525,13 +543,13 @@ void comeDownMode(){
 	return;
     }
     //显示
-    Serial.println("xxxxxxxxxxxxxxxxxxxxxx");
+    Serial.print("miao2   =");Serial.println(miao2);
+    Serial.print("count_10= ");Serial.println(count_10ms);
     disptime(miao2,count_10ms);
     //第三次检查key1
     if((mode=ifKeySwitchMode()) == CLK_MODE){
 	return;
     }
-    Serial.println("<<<<out ");
 }
 
 
@@ -546,4 +564,10 @@ void comeDownMode(){
  * 动作3：按key1，秒表not RUN.
  * 动作4：再按key1，秒表没有反映，无效。
  * 动作5：按key0，时钟显示，RUN
+ *
+ *
+ *
+ * 2014.5.13.19.17：用了siren2.ino的键盘少面程序，还是同样的问题
+ * 	说明键盘扫描程序，都是是没有问题的。
+ *
  */
