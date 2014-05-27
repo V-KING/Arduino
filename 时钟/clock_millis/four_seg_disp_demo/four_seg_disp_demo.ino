@@ -3,7 +3,7 @@
  *      Name: four_seg_disp_demo.ino
  *   Version: 1.0 - 2014/5/15 17:05:49
  *   Company: WWW.SOGWORKS.CN
- *  Function: hello V-KING
+ *  Function: 四个数码管显示 
  *==================================================
  * */
 
@@ -50,7 +50,7 @@ int bitn[4]={
  * 二极管正极--->
  *
  */
-int delayTime=0;                       //延时的时间
+int delayTime=1;                       //延时的时间
 /* **串口相关变量** */
 int restBytes=0;		  //串口中剩下的字节数
 int COMMON=1;
@@ -58,7 +58,7 @@ int COMMON=1;
 //数码管显示函数，8段对应8个参数；输入为1则点亮，输入为0则熄灭
 void displaySeg(boolean a,boolean b,boolean c,boolean d,
 	boolean e,boolean f,boolean g,boolean dp) {
-    if(a)     digitalWrite(aPin,!COMMON);
+    if(a)     digitalWrite(aPin,!COMMON);		//a要点亮的话就是和公共端COMMON不一样，所以!COMMON
     else    digitalWrite(aPin,COMMON);
     if(b)     digitalWrite(bPin,!COMMON);
     else    digitalWrite(bPin,COMMON);
@@ -81,7 +81,7 @@ void displaySeg(boolean a,boolean b,boolean c,boolean d,
 void displayNum(byte data) {
     switch (data) {
         case 0:
-            displaySeg(1,1,1,1,1,1,0,0);
+            displaySeg(1,1,1,1,1,1,0,0);	//对照数码管原理图，点亮led
             break;
         case 1:
             displaySeg(0,1,1,0,0,0,0,0);
@@ -185,6 +185,7 @@ void disp(int n,int data)
 	displayNum(10);
         break;  
     }
+    //将所有数码管的共阳极都让他不工作
     for(int i=0; i<4; i++){
 	digitalWrite(bitn[i],!COMMON);
     }
@@ -217,13 +218,10 @@ void setup()
 void loop()
 {
     restBytes=Serial.available();
-    //如果刚好是4个就读出来,这里其实可以加一个过滤，让读取的数据只能是0-9的数字，后面可以加上，很简单
+    //串口中的数据。
     if(restBytes > 0){
 	delayTime=Serial.parseInt(); 
     }
-    //数码管显示
+    //数码管显示，1234，刷新的频率为delayTime
     disptime(12,34,delayTime);	
 }
-
-
-

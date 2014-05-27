@@ -2,10 +2,11 @@
 /*
  * ====================================================
  *      Name: come_down.ino
- *   Version: 1.0
+ *   Version: 1.0 
  *  Compiler: arduino-IDE
  *   Company: WWW.SOGWORKS.CN 
- * Functioin: a clock with arduino uno
+ * Functioin: a clock with arduino uno.串口输入1234这样的数字，
+ * 	12表示12时，34表示34分
  * =====================================================
  * */
 
@@ -136,10 +137,12 @@ void displayNum(byte data) {
 void dock(int lightUp_flag) 
 {
     if(lightUp_flag==1){
-	displaySeg(0,0,0,0,0,0,0,1);                       
+//	displaySeg(0,0,0,0,0,0,0,1);                       
+	digitalWrite(dpPin,!COMMON);
     }
     else{
-	displaySeg(0,0,0,0,0,0,0,0);                       
+	//displaySeg(0,0,0,0,0,0,0,0);                       
+	digitalWrite(dpPin,!COMMON);
     }
 }
 /*
@@ -228,12 +231,15 @@ unsigned long passms;				//从开机起总共过去了多少ms
 unsigned long nows;				//从00:00:00起总共过去了多少ms,这个是正真的时间
 unsigned long dispshi=0,dispfen=0,dispmiao=0;	//要显示的时分秒
 unsigned long startms=0;	 		//记录计时前的时间（ms）
+unsigned long now_dot=0;
+unsigned long prior_dot=0;
 void setup()
 {
     Serial.begin(9600);  
     for(int i=2;i<=13;i++)
         pinMode(i,OUTPUT);//设置4～11 引脚为输出模式
     startms=millis();	  //记录计时前的时间（ms）
+    prior_dot=millis();
 }
 
 void loop()
@@ -272,6 +278,21 @@ void loop()
         Serial.print(dispfen,DEC);        
         Serial.print(":");
         Serial.println(dispmiao,DEC);   
+    }
+    //没到500ms的时候就让
+    now_dot=millis();
+    if(now_dot-prior_dot<500){	   //前500ms的时候就一直让两个点亮
+	clearLED();
+	digitalWrite(bitn[1],COMMON);
+	dock(1);
+    }
+    else if(now_dot-prior_dot<1000){//后500ms就一直让两个点灭
+	clearLED();
+	digitalWrite(bitn[1],!COMMON);
+	dock(0);	
+    }
+    else{
+	prior_dot=now_dot;
     }
     //数码管显示
     disptime(dispshi,dispfen);	
