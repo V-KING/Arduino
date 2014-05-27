@@ -356,7 +356,6 @@ void loop()
 {
 	//按键
 	if(buttonDetect(buttonPP)==PRESS_MOMENT){
-	//if(digitalRead(A0)==LOW){
 		stopFlag=~stopFlag;
 	}
 	if(stopFlag){
@@ -371,21 +370,7 @@ void loop()
 		if(miao>=100)		    //满100百分秒清零,秒加1
 		{
 			miao=0;
-			//beepingAndStop();			//蜂鸣
 		}
 	}
 	disptime(miao,count_10ms);
-}
-
-void beeping(){
-	//tone(beep_pin,freq);	
-}
-
-void beepingAndStop(){
-	//全部显示0
-	disp(0,0);		//显示变量内容
-	for(int i=0; i<4; i++){
-		digitalWrite(bitn[i],low);
-	}
-	//beeping();
 }
