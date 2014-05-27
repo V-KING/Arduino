@@ -1,23 +1,17 @@
-/*
- * ============================================
- *       Filename:  morse_lcd_i2c.c
- *        Version:  1.0
- *        Created:  2014-2-10 10:54
- *        Complete: 2014-2-11 14:22
- *         Author: V__KING__ 
- *        Company: sogworks 
- * ============================================
- *用法：
+/*==================================================
+ *     Name: 1.ino
+ *  Version: 1.0 - 2014/5/21 8:51:33
+ *  Company: WWW.SOGWORKS.CN
+ * Function: 
  *  1.短按就是DI
  *  2.长按就是DA
  *  3.不按2s以上就是一个morse字符的终止
- * ============================================
- */
+ *==================================================*/
 
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 #define ledPin 13
-#define ldr 3
+#define ldr 3 		  //读取模拟值的引脚，就是有ad的引脚
 /*定义显示设备*/
 #define LCD_DEV 1     //LCD_DEV 定义为1：就是LCD显示；定义为0：就是不显示
 #define SERIAL_DEV 1
@@ -159,6 +153,7 @@ void getMorseSignal(int value,int limit_value  ){
 		if(n>=16) n=0;
 		if(j++>=15) {j=0;m=0;delay(1000);lcd.clear();}
 #endif
+
 #ifdef SERIAL_DEV //定义了其他的显示设备,如串口显示
 		if(getMorse=="...") Serial.print("s");
 		else if(getMorse=="---") Serial.print("o");
